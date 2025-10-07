@@ -6,6 +6,8 @@ import com.kadri.ecommerce.kafka.OrderConfirmation;
 import com.kadri.ecommerce.kafka.OrderProducer;
 import com.kadri.ecommerce.orderline.OrderLineRequest;
 import com.kadri.ecommerce.orderline.OrderLineService;
+import com.kadri.ecommerce.payment.PaymentClient;
+import com.kadri.ecommerce.payment.PaymentRequest;
 import com.kadri.ecommerce.product.ProductClient;
 import com.kadri.ecommerce.product.PurchaseRequest;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,6 +28,7 @@ public class OrderService {
     private final OrderMapper mapper;
     private final OrderLineService orderLineService;
     private final OrderProducer orderProducer;
+    private final PaymentClient paymentClient;
 
     public Integer createOrder(OrderRequest request) {
         //check the customer
@@ -46,7 +49,15 @@ public class OrderService {
                     )
             );
         }
-        //todo start payment process
+        //start payment process
+        var paymentRequest = new PaymentRequest(
+                request.amount(),
+                request.paymentMethod(),
+                order.getId(),
+                order.getReference(),
+                customer
+        );
+        paymentClient.requestOrderPayment(paymentRequest);
         //send the order confirmation --> notification-ms
         orderProducer.sendOrderConfirmation(
                 new OrderConfirmation(
