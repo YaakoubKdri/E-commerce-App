@@ -1,7 +1,13 @@
 package com.kadri.ecommerce.payment;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public class Mapper {
     public Payment toPayment(PaymentRequest request) {
+        if(request == null){
+            return null;
+        }
         return Payment.builder()
                 .id(request.id())
                 .orderId(request.orderId())
